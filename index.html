@@ -24,6 +24,9 @@ header h1 {
     text-align:center; 
     width:100%; 
 }
+    .bookTitle, .bookAuthor, .bookYear {
+  font-weight: bold; /* do të jetë bold gjithmonë, desktop dhe celular */
+}
 #searchBox { 
     margin-top:10px; 
     padding:7px 12px; 
@@ -220,12 +223,12 @@ async function loadBooks(category = null, searchText = "") {
     const div = document.createElement("div");
     div.className = "bookCard";
     div.innerHTML = `
-      <img src="${data.imageUrl}" alt="${data.title}">
-      <h3>${data.title}</h3>
-      <p><strong>Autor:</strong> ${data.author}</p>
-      <p><strong>Viti:</strong> ${data.year}</p>
-      <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
-    `;
+  <img src="${data.imageUrl}" alt="${data.title}">
+  <h3 class="bookTitle">${data.title}</h3>
+  <p><strong>Autor:</strong> <span class="bookAuthor">${data.author}</span></p>
+  <p><strong>Viti:</strong> <span class="bookYear">${data.year}</span></p>
+  <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
+`;
     div.addEventListener("click", (e) => {
       if(e.target.tagName !== 'A') showBookModal(data);
     });
@@ -268,6 +271,7 @@ loadBooks();
 </script>
 </body>
 </html>
+
 
 
 
