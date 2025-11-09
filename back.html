@@ -3,139 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C Panel - Biblioteka Online</title>
+<title>Biblioteka Online - Backup</title>
 <style>
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f6fa;
-  margin: 0; padding: 0;
+  font-family: Arial;
+  margin:0;
+  padding:0;
+  background:#f5f5f5;
 }
 header {
-  background: #2b3a67;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
+  background:#2b3a67;
+  color:white;
+  padding:20px 10px;
+  text-align:center;
+  position:relative;
 }
-.container {
-  max-width: 800px;
-  margin: 30px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #2b3a67;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+header h1 { margin:0; font-size:28px; }
+#burger { position:absolute; left:15px; top:22px; font-size:26px; cursor:pointer; }
+#searchBox { margin-top:10px; padding:8px 10px; border-radius:5px; border:none; width:80%; max-width:400px; }
+
+nav {
+  display:none;
+  background:white;
+  padding:10px;
+  position:absolute;
+  top:70px;
+  left:10px;
+  width:220px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  z-index:10;
+  border-radius:10px;
 }
-h2 {
-  color: #2b3a67;
-  text-align: center;
-  margin-bottom: 15px;
+nav ul { list-style:none; padding:0; margin:0; }
+nav ul li { padding:12px 10px; border-bottom:1px solid #ccc; cursor:pointer; font-weight:500; }
+nav ul li:hover { background:#f0f0f0; }
+
+#booksContainer { max-width:1000px; margin:25px auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; padding:0 10px; }
+
+.bookCard {
+  background:white; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  text-align:center; display:flex; flex-direction:column; align-items:center; cursor:pointer; border:2px solid #2b3a67;
 }
-input, textarea, select, button {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.bookCard img { width:150px; height:200px; object-fit:cover; border-radius:5px; }
+.bookCard h3 { margin:10px 0 5px; }
+.bookCard p { font-size:14px; margin:5px 0; }
+.bookCard a { display:inline-block; margin-top:5px; padding:5px 10px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; }
+
+/* Modal */
+#bookModal, #cPanelModal {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7);
+  justify-content:center; align-items:center; z-index:100;
 }
-button {
-  background: #2b3a67;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
+#bookModalContent, #cPanelContent {
+  background:white; padding:20px; border-radius:10px; max-width:450px; width:90%; max-height:90%; overflow-y:auto; border:2px solid #2b3a67;
 }
-button:hover {
-  background: #1f2c53;
-}
-.message {
-  text-align: center;
-  color: green;
-  font-weight: bold;
-}
-#bookList {
-  margin-top: 30px;
-}
-.bookItem {
-  background: #f0f3f8;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  border-left: 4px solid #2b3a67;
-}
-.bookItem h4 {
-  margin: 5px 0;
-}
-.deleteBtn {
-  background: #d63031;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  float: right;
-}
-.deleteBtn:hover {
-  background: #b22222;
-}
-#logoutBtn {
-  background: #e74c3c;
-}
-#logoutBtn:hover {
-  background: #c0392b;
-}
+#bookModalContent img { width:100%; height:auto; border-radius:5px; }
+#closeModal, #closeCPanel { cursor:pointer; float:right; font-size:20px; font-weight:bold; color:#2b3a67; }
+
+input, textarea, select, button { display:block; width:100%; margin:10px 0; padding:10px; border-radius:5px; border:1px solid #ccc; }
+button { background:#2b3a67; color:white; border:none; cursor:pointer; font-weight:bold; }
+.message { text-align:center; color:red; font-weight:bold; }
+
+@media (max-width:600px) { #booksContainer { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
 
-<header>Paneli i Administratorit</header>
+<header>
+  <div id="burger">&#9776;</div>
+  <h1>Biblioteka Online - Backup</h1>
+  <input type="text" id="searchBox" placeholder="Kërko libër ose autor...">
+</header>
 
-<div class="container" id="loginContainer">
-  <h2>Kyçu si Administrator</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Fjalëkalimi">
-  <button id="loginBtn">Kyçu</button>
-  <p class="message" id="loginMessage"></p>
+<nav id="navMenu">
+  <ul>
+    <li class="categoryItem" data-category="Të gjitha">Të gjitha</li>
+    <li id="cPanelLink">C Panel</li>
+    <li class="categoryItem" data-category="Romane">Romane</li>
+    <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
+    <li class="categoryItem" data-category="Të tjera">Të tjera</li>
+  </ul>
+</nav>
+
+<div id="booksContainer"></div>
+
+<!-- Modal Libri -->
+<div id="bookModal">
+  <div id="bookModalContent">
+    <span id="closeModal">✖</span>
+    <div id="modalContent"></div>
+  </div>
 </div>
 
-<div class="container" id="adminPanel" style="display:none;">
-  <button id="logoutBtn">Dil</button>
-
-  <h2>Shto Kategori të Re</h2>
-  <input type="text" id="categoryName" placeholder="Emri i kategorisë">
-  <button id="addCategoryBtn">Shto Kategori</button>
-  <p class="message" id="categoryMsg"></p>
-
-  <hr>
-
-  <h2>Shto Libër të Ri</h2>
-  <input type="text" id="bookTitle" placeholder="Titulli">
-  <input type="text" id="bookAuthor" placeholder="Autori">
-  <input type="text" id="bookYear" placeholder="Viti">
-  <textarea id="bookDescription" placeholder="Përshkrimi"></textarea>
-  <input type="text" id="bookImageUrl" placeholder="Link i fotos (Drive)">
-  <input type="text" id="bookPdfUrl" placeholder="Link PDF (Drive)">
-  <select id="bookCategory"></select>
-  <button id="uploadBookBtn">Shto Librin</button>
-  <p class="message" id="uploadMessage"></p>
-
-  <hr>
-  <h2>Lista e Librave</h2>
-  <div id="bookList"></div>
+<!-- Modal C Panel -->
+<div id="cPanelModal">
+  <div id="cPanelContent">
+    <span id="closeCPanel">✖</span>
+    <div id="loginContainer">
+      <h2>Login Admin</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Fjalëkalimi">
+      <button id="loginBtn">Kyçu</button>
+      <p class="message" id="loginMessage"></p>
+    </div>
+    <div id="panelContainer" style="display:none;">
+      <h2>Shto kategori të re</h2>
+      <input type="text" id="categoryName" placeholder="Emri i kategorisë">
+      <button id="addCategoryBtn">Shto Kategori</button>
+      <p class="message" id="categoryMsg"></p>
+      <hr>
+      <h2>Shto libër të ri</h2>
+      <input type="text" id="bookTitle" placeholder="Titulli">
+      <input type="text" id="bookAuthor" placeholder="Autori">
+      <input type="text" id="bookYear" placeholder="Viti">
+      <textarea id="bookDescription" placeholder="Përshkrimi"></textarea>
+      <input type="text" id="bookImageUrl" placeholder="Link i fotos (Drive)">
+      <input type="text" id="bookPdfUrl" placeholder="Link PDF (Drive)">
+      <select id="bookCategory"></select>
+      <button id="uploadBookBtn">Shto Librin</button>
+      <button id="logoutBtn">Dil</button>
+      <p class="message" id="uploadMessage"></p>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { 
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
   authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
@@ -145,125 +141,124 @@ const firebaseConfig = {
   appId: "1:1056004303783:web:335725cdfeefc690702482",
   measurementId: "G-QHEGWD5J2B"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Elemente
-const loginContainer = document.getElementById("loginContainer");
-const adminPanel = document.getElementById("adminPanel");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+const booksContainer = document.getElementById("booksContainer");
+const navMenu = document.getElementById("navMenu");
+const burger = document.getElementById("burger");
+const cPanelLink = document.getElementById("cPanelLink");
+const categoryItems = document.querySelectorAll(".categoryItem");
+const searchBox = document.getElementById("searchBox");
 
-// LOGIN
-loginBtn.addEventListener("click", async () => {
+const bookModal = document.getElementById("bookModal");
+const modalContent = document.getElementById("modalContent");
+const closeModal = document.getElementById("closeModal");
+
+const cPanelModal = document.getElementById("cPanelModal");
+const closeCPanel = document.getElementById("closeCPanel");
+
+const loginContainer = document.getElementById("loginContainer");
+const panelContainer = document.getElementById("panelContainer");
+const bookCategory = document.getElementById("bookCategory");
+
+// Burger menu
+burger.addEventListener("click", () => {
+  const open = navMenu.style.display === "block";
+  navMenu.style.display = open ? "none" : "block";
+  burger.innerHTML = open ? "&#9776;" : "✖";
+});
+
+// C Panel Modal
+cPanelLink.addEventListener("click", () => {
+  cPanelModal.style.display = "flex";
+  navMenu.style.display = "none";
+  burger.innerHTML = "&#9776;";
+});
+
+// Close modals
+closeModal.addEventListener("click", () => bookModal.style.display = "none");
+closeCPanel.addEventListener("click", () => cPanelModal.style.display = "none");
+
+// Admin login
+document.getElementById("loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const msg = document.getElementById("loginMessage");
   msg.textContent = "Po kyç...";
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    msg.textContent = "";
-  } catch {
-    msg.textContent = "Email ose fjalëkalim gabim!";
-  }
+  try { await signInWithEmailAndPassword(auth, email, password); msg.textContent = ""; }
+  catch { msg.textContent = "Email ose fjalëkalim gabim!"; }
 });
 
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
+document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); });
 
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginContainer.style.display = "none";
-    adminPanel.style.display = "block";
-    loadCategories();
-    loadBooks();
-  } else {
-    loginContainer.style.display = "block";
-    adminPanel.style.display = "none";
-  }
+  if (user) { loginContainer.style.display = "none"; panelContainer.style.display = "block"; loadCategories(); }
+  else { loginContainer.style.display = "block"; panelContainer.style.display = "none"; }
 });
 
-// KATEGORITË
+// Categories
 document.getElementById("addCategoryBtn").addEventListener("click", async () => {
   const name = document.getElementById("categoryName").value;
   const msg = document.getElementById("categoryMsg");
-  if (!name) return;
-  try {
-    await addDoc(collection(db, "categories"), { name });
-    msg.textContent = "✅ Kategoria u shtua!";
-    document.getElementById("categoryName").value = "";
-    loadCategories();
-  } catch (err) { msg.textContent = err.message; }
+  if(!name) return;
+  try { await addDoc(collection(db, "categories"), { name }); msg.textContent = "✅ Kategoria u shtua!"; document.getElementById("categoryName").value = ""; loadCategories(); }
+  catch(err){ msg.textContent = err.message; }
 });
 
 async function loadCategories() {
-  const bookCategory = document.getElementById("bookCategory");
   bookCategory.innerHTML = "";
   const snapshot = await getDocs(collection(db, "categories"));
-  snapshot.forEach(doc => {
-    const opt = document.createElement("option");
-    opt.value = doc.data().name;
-    opt.textContent = doc.data().name;
-    bookCategory.appendChild(opt);
-  });
+  snapshot.forEach(doc => { const opt = document.createElement("option"); opt.value = doc.data().name; opt.textContent = doc.data().name; bookCategory.appendChild(opt); });
 }
 
-// SHTO LIBËR
+// Upload book
 document.getElementById("uploadBookBtn").addEventListener("click", async () => {
   const title = document.getElementById("bookTitle").value;
   const author = document.getElementById("bookAuthor").value;
   const year = document.getElementById("bookYear").value;
   const description = document.getElementById("bookDescription").value;
-  const category = document.getElementById("bookCategory").value;
+  const category = bookCategory.value;
   const imageUrl = document.getElementById("bookImageUrl").value;
   const pdfUrl = document.getElementById("bookPdfUrl").value;
   const msg = document.getElementById("uploadMessage");
-
-  if (!title || !author || !pdfUrl || !imageUrl) {
-    msg.textContent = "⚠️ Plotëso të gjitha fushat!";
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "books"), {
-      title, author, year, description, category, pdfUrl, imageUrl, createdAt: new Date()
-    });
-    msg.textContent = "✅ Libri u shtua!";
-    loadBooks();
-  } catch (err) { msg.textContent = err.message; }
+  if(!pdfUrl || !imageUrl) { msg.textContent = "Vendos link PDF dhe Foto!"; return; }
+  try { await addDoc(collection(db, "books"), { title, author, year, description, category, pdfUrl, imageUrl, createdAt: new Date() }); msg.textContent = "✅ Libri u shtua!"; }
+  catch(err){ msg.textContent = err.message; }
 });
 
-// SHFAQ LIBRAT
-async function loadBooks() {
-  const bookList = document.getElementById("bookList");
-  bookList.innerHTML = "";
-  const snapshot = await getDocs(collection(db, "books"));
-  snapshot.forEach(b => {
-    const d = b.data();
+// Load books
+async function loadBooks(category=null, searchText="") {
+  booksContainer.innerHTML = "";
+  let q = collection(db, "books");
+  if(category && category!=="Të gjitha") q = query(q, where("category","==",category));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if(searchText && !(d.title.toLowerCase().includes(searchText.toLowerCase()) || d.author.toLowerCase().includes(searchText.toLowerCase()))) return;
     const div = document.createElement("div");
-    div.className = "bookItem";
-    div.innerHTML = `
-      <h4>${d.title} - ${d.author}
-        <button class="deleteBtn" data-id="${b.id}">Fshi</button>
-      </h4>
-      <p><strong>Kategoria:</strong> ${d.category}</p>
-      <p><a href="${d.pdfUrl}" target="_blank">📖 PDF</a></p>
-    `;
-    bookList.appendChild(div);
-  });
-
-  document.querySelectorAll(".deleteBtn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      if (confirm("A je i sigurt që dëshiron ta fshish këtë libër?")) {
-        await deleteDoc(doc(db, "books", id));
-        loadBooks();
-      }
-    });
+    div.className="bookCard";
+    div.innerHTML = `<img src="${d.imageUrl}" alt="${d.title}"><h3>${d.title}</h3><p><strong>Autor:</strong> ${d.author}</p><p><strong>Viti:</strong> ${d.year}</p>`;
+    div.addEventListener("click", ()=>showBookModal(d));
+    booksContainer.appendChild(div);
   });
 }
+
+// Show book modal
+function showBookModal(b) {
+  modalContent.innerHTML = `<h2>${b.title}</h2><p><strong>Autor:</strong> ${b.author}</p><p><strong>Viti:</strong> ${b.year}</p><img src="${b.imageUrl}" alt="${b.title}"><p>${b.description}</p><a href="${b.pdfUrl}" target="_blank">📖 Shkarko PDF</a>`;
+  bookModal.style.display="flex";
+}
+
+// Filters
+categoryItems.forEach(item=>item.addEventListener("click",()=>{ const cat=item.dataset.category; loadBooks(cat, searchBox.value); navMenu.style.display="none"; burger.innerHTML="&#9776;"; }));
+searchBox.addEventListener("input",()=>loadBooks(null, searchBox.value));
+
+// Init
+loadBooks();
 </script>
+
 </body>
 </html>
