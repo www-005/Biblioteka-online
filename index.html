@@ -6,14 +6,49 @@
 <title>Biblioteka Online</title>
 <style>
 body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
-header { background:#2b3a67; color:white; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; position:relative; }
-header h1 { margin:0; font-size:24px; flex:1; text-align:center; }
-#burger { font-size:24px; cursor:pointer; margin-right:10px; }
-#searchBox { padding:5px 10px; border-radius:5px; border:none; width:250px; max-width:40%; }
+header { 
+  background:#2b3a67; 
+  color:white; 
+  padding:20px; 
+  text-align:center; 
+  position:relative;
+}
+header h1 { margin:0; font-size:28px; }
+#burger {
+  position:absolute; 
+  left:15px; 
+  top:20px; 
+  font-size:28px; 
+  cursor:pointer;
+}
+#searchBox {
+  margin-top:10px;
+  padding:8px 10px; 
+  border-radius:8px; 
+  border:none; 
+  width:80%;
+  max-width:350px;
+}
 
-nav { display:none; background:white; padding:10px; position:absolute; top:50px; left:0; width:220px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:10; border-radius:5px; }
+nav {
+  display:none;
+  background:white;
+  padding:10px;
+  position:absolute;
+  top:75px;
+  left:0;
+  width:220px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  z-index:10;
+  border-radius:5px;
+}
 nav ul { list-style:none; padding:0; margin:0; }
-nav ul li { padding:10px 0; border-bottom:1px solid #ccc; cursor:pointer; }
+nav ul li {
+  padding:10px 0;
+  border-bottom:1px solid #ccc;
+  cursor:pointer;
+  text-align:center;
+}
 nav ul li:hover { background:#eee; }
 
 #booksContainer {
@@ -22,17 +57,25 @@ nav ul li:hover { background:#eee; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap:20px;
+  padding:10px;
 }
 
 .bookCard {
   background:white;
   padding:15px;
   border-radius:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  border:2px solid #2b3a67;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
   text-align:center;
   display:flex;
   flex-direction:column;
   align-items:center;
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.bookCard:hover {
+  transform:scale(1.03);
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
 }
 
 .bookCard img {
@@ -41,24 +84,44 @@ nav ul li:hover { background:#eee; }
   object-fit:cover;
   border-radius:5px;
 }
-
 .bookCard h3 { margin:10px 0 5px; }
 .bookCard p { font-size:14px; margin:5px 0; }
 .bookCard a {
   display:inline-block;
   margin-top:5px;
-  padding:5px 10px;
+  padding:6px 12px;
   background:#2b3a67;
   color:white;
   border-radius:5px;
   text-decoration:none;
 }
 
+/* Modal per detajet e librit */
+#bookModal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+#bookModalContent {
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  max-width:400px;
+  width:90%;
+  max-height:90%;
+  overflow-y:auto;
+}
+#bookModalContent img { width:100%; height:auto; border-radius:5px; }
+#closeModal { cursor:pointer; float:right; font-size:18px; font-weight:bold; }
+
 /* Për telefon: 2 libra për rresht */
 @media (max-width:600px) {
-  #booksContainer {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  #booksContainer { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -72,15 +135,23 @@ nav ul li:hover { background:#eee; }
 
 <nav id="navMenu">
   <ul>
-    <li id="homeLink">Kreu</li>
     <li id="cPanelLink">C Panel</li>
+    <li class="categoryItem" data-category="Të gjitha">Të gjitha</li>
     <li class="categoryItem" data-category="Romane">Romane</li>
     <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
-    <li class="categoryItem" data-category="Te tjera">Të tjera</li>
+    <li class="categoryItem" data-category="Të tjera">Të tjera</li>
   </ul>
 </nav>
 
 <div id="booksContainer"></div>
+
+<!-- Modal per detajet e librit -->
+<div id="bookModal">
+  <div id="bookModalContent">
+    <span id="closeModal">✖</span>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -106,43 +177,40 @@ const burger = document.getElementById("burger");
 const cPanelLink = document.getElementById("cPanelLink");
 const categoryItems = document.querySelectorAll(".categoryItem");
 const searchBox = document.getElementById("searchBox");
-const homeLink = document.getElementById("homeLink");
 
-// Ruaj historinë për funksionin “Back”
-let currentView = "home";
-let lastCategory = null;
+// Modal
+const bookModal = document.getElementById("bookModal");
+const modalContent = document.getElementById("modalContent");
+const closeModal = document.getElementById("closeModal");
 
-// Burger menu toggle
+// Burger toggle me X
 burger.addEventListener("click", () => {
-  navMenu.style.display = navMenu.style.display === "block" ? "none" : "block";
+  if (navMenu.style.display === "block") {
+    navMenu.style.display = "none";
+    burger.innerHTML = "&#9776;"; // burger icon
+  } else {
+    navMenu.style.display = "block";
+    burger.innerHTML = "&times;"; // X icon
+  }
 });
 
-// Shko në C Panel
+// C Panel
 cPanelLink.addEventListener("click", () => {
-  currentView = "panel";
   window.location.href = "panel.html";
 });
 
-// Shko në faqen kryesore
-homeLink.addEventListener("click", () => {
-  loadBooks();
-  currentView = "home";
-  navMenu.style.display = "none";
-});
-
-// Ngarko librat nga Firestore
+// Ngarko librat
 async function loadBooks(category = null, searchText = "") {
   booksContainer.innerHTML = "";
   let booksQuery = collection(db, "books");
-  if(category) {
-    booksQuery = query(collection(db, "books"), where("category","==",category));
+  if (category && category !== "Të gjitha") {
+    booksQuery = query(collection(db, "books"), where("category", "==", category));
   }
   const snapshot = await getDocs(booksQuery);
   snapshot.forEach(doc => {
     const data = doc.data();
-    // Filtrimi sipas kërkimit
-    if(searchText && !(
-      data.title.toLowerCase().includes(searchText.toLowerCase()) || 
+    if (searchText && !(
+      data.title.toLowerCase().includes(searchText.toLowerCase()) ||
       data.author.toLowerCase().includes(searchText.toLowerCase())
     )) return;
 
@@ -153,13 +221,36 @@ async function loadBooks(category = null, searchText = "") {
       <h3>${data.title}</h3>
       <p><strong>Autor:</strong> ${data.author}</p>
       <p><strong>Viti:</strong> ${data.year}</p>
-      <p>${data.description}</p>
-      <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
     `;
+    div.addEventListener("click", () => showBookModal(data));
     booksContainer.appendChild(div);
   });
-  lastCategory = category;
-  currentView = category ? "category" : "home";
+}
+
+// Modal funksion
+function showBookModal(bookData) {
+  modalContent.innerHTML = `
+    <h2>${bookData.title}</h2>
+    <p><strong>Autor:</strong> ${bookData.author}</p>
+    <p><strong>Viti:</strong> ${bookData.year}</p>
+    <img src="${bookData.imageUrl}" alt="${bookData.title}">
+    <p>${bookData.description}</p>
+    <a href="${bookData.pdfUrl}" target="_blank">Shkarko PDF</a>
+  `;
+  bookModal.style.display = "flex";
+  history.pushState({modal:true}, "book", "#book");
+}
+
+closeModal.addEventListener("click", closeBookModal);
+
+// Back button
+window.addEventListener("popstate", (e) => {
+  if (bookModal.style.display === "flex") closeBookModal();
+});
+
+function closeBookModal() {
+  bookModal.style.display = "none";
+  if (history.state && history.state.modal) history.back();
 }
 
 // Filtrimi sipas kategorive
@@ -167,32 +258,15 @@ categoryItems.forEach(item => {
   item.addEventListener("click", () => {
     const selectedCategory = item.dataset.category;
     loadBooks(selectedCategory, searchBox.value);
-    navMenu.style.display = "none"; 
+    navMenu.style.display = "none";
+    burger.innerHTML = "&#9776;";
   });
 });
 
 // Filtrimi sipas kërkimit
-searchBox.addEventListener("input", () => {
-  loadBooks(lastCategory, searchBox.value);
-});
+searchBox.addEventListener("input", () => loadBooks(null, searchBox.value));
 
-// Funksioni për butonin “Back” në telefon
-window.addEventListener("popstate", (e) => {
-  if (currentView === "category" || currentView === "panel") {
-    loadBooks();
-    currentView = "home";
-    e.preventDefault();
-    history.pushState({}, "");
-  } else {
-    // nëse është në faqen kryesore -> del nga aplikacioni
-    window.close();
-  }
-});
-
-// Shto një histori fillestare që “back” të mos dalë menjëherë
-history.pushState({}, "");
-
-// Ngarko të gjithë librat në fillim
+// Ngarko librat fillimisht
 loadBooks();
 </script>
 
