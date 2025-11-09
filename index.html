@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteka Online</title>
+<style>
+body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
+header { background:#2b3a67; color:white; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; position:relative; }
+header h1 { margin:0; font-size:24px; flex:1; text-align:center; }
+#burger { font-size:24px; cursor:pointer; margin-right:10px; }
+#searchBox { padding:5px 10px; border-radius:5px; border:none; width:250px; max-width:40%; }
+nav { display:none; background:white; padding:10px; position:absolute; top:50px; left:0; width:220px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:10; border-radius:5px; }
+nav ul { list-style:none; padding:0; margin:0; }
+nav ul li { padding:10px 0; border-bottom:1px solid #ccc; cursor:pointer; }
+nav ul li:hover { background:#eee; }
+
+#booksContainer { max-width:1000px; margin:20px auto; display:flex; flex-wrap:wrap; gap:20px; justify-content:center; }
+.bookCard { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2); width:200px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+.bookCard img { width:150px; height:200px; object-fit:cover; border-radius:5px; }
+.bookCard h3 { margin:10px 0 5px; }
+.bookCard p { font-size:14px; margin:5px 0; }
+.bookCard a { display:inline-block; margin-top:5px; padding:5px 10px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div id="burger">&#9776;</div>
+  <h1>Biblioteka Online</h1>
+  <input type="text" id="searchBox" placeholder="Kërko libër ose autor...">
+</header>
+
+<nav id="navMenu">
+  <ul>
+    <li id="cPanelLink">C Panel</li>
+    <li class="categoryItem" data-category="Romane">Romane</li>
+    <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
+    <li class="categoryItem" data-category="Te tjera">Të tjera</li>
+  </ul>
+</nav>
+
+<div id="booksContainer"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
+  authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
+  projectId: "bibliotekaapp-2f2b5",
+  storageBucket: "bibliotekaapp-2f2b5.appspot.com",
+  messagingSenderId: "1056004303783",
+  appId: "1:1056004303783:web:335725cdfeefc690702482",
+  measurementId: "G-QHEGWD5J2B"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const booksContainer = document.getElementById("booksContainer");
+const navMenu = document.getElementById("navMenu");
+const burger = document.getElementById("burger");
+const cPanelLink = document.getElementById("cPanelLink");
+const categoryItems = document.querySelectorAll(".categoryItem");
+const searchBox = document.getElementById("searchBox");
+
+// Burger menu toggle
+burger.addEventListener("click", () => {
+  navMenu.style.display = navMenu.style.display === "block" ? "none" : "block";
+});
+
+// Kur klikon C Panel hap panel.html
+cPanelLink.addEventListener("click", () => {
+  window.location.href = "panel.html";
+});
+
+// Ngarko librat nga Firestore
+async function loadBooks(category = null, searchText = "") {
+  booksContainer.innerHTML = "";
+  let booksQuery = collection(db, "books");
+  if(category) {
+    booksQuery = query(collection(db, "books"), where("category","==",category));
+  }
+  const snapshot = await getDocs(booksQuery);
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    // Filtrimi sipas kërkimit
+    if(searchText && !(
+      data.title.toLowerCase().includes(searchText.toLowerCase()) || 
+      data.author.toLowerCase().includes(searchText.toLowerCase())
+    )) return;
+
+    const div = document.createElement("div");
+    div.className = "bookCard";
+    div.innerHTML = `
+      <img src="${data.imageUrl}" alt="${data.title}">
+      <h3>${data.title}</h3>
+      <p><strong>Autor:</strong> ${data.author}</p>
+      <p><strong>Viti:</strong> ${data.year}</p>
+      <p>${data.description}</p>
+      <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
+    `;
+    booksContainer.appendChild(div);
+  });
+}
+
+// Filtrimi sipas kategorive
+categoryItems.forEach(item => {
+  item.addEventListener("click", () => {
+    const selectedCategory = item.dataset.category;
+    loadBooks(selectedCategory, searchBox.value);
+    navMenu.style.display = "none"; // mbyllet burger menu pas klikimit
+  });
+});
+
+// Filtrimi sipas kërkimit
+searchBox.addEventListener("input", () => {
+  loadBooks(null, searchBox.value);
+});
+
+// Ngarko të gjithë librat në fillim
+loadBooks();
+</script>
+
+</body>
+</html>
