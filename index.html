@@ -101,6 +101,8 @@ nav ul li:hover { background:#eee; }
     cursor:pointer; 
     border:2px solid #2b3a67; 
     transition: transform 0.2s, box-shadow 0.2s; 
+    width:100%;
+    box-sizing:border-box;
 }
 .bookCard:hover { transform: translateY(-3px); box-shadow:0 4px 8px rgba(0,0,0,0.3); }
 .bookCard img { width:140px; height:180px; object-fit:cover; border-radius:5px; }
@@ -123,8 +125,9 @@ nav ul li:hover { background:#eee; }
   .bookCard p { font-size:12px; }
   .bookCard a { font-size:12px; padding:4px 6px; }
 }
+
 @media (max-width:500px) {
-  #booksContainer { grid-template-columns: repeat(2, 1fr); gap:10px; }
+  #booksContainer { grid-template-columns: repeat(2, 1fr); gap:10px; padding:0 5px; }
   .bookCard img { width:100px; height:140px; }
   .bookCard h3 { font-size:13px; }
   .bookCard p { font-size:11px; }
