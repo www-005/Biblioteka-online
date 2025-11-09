@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Panel - Biblioteka Online</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  margin: 0; padding: 0;
+}
+header {
+  background: #2b3a67;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #2b3a67;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+h2 {
+  color: #2b3a67;
+  text-align: center;
+  margin-bottom: 15px;
+}
+input, textarea, select, button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+button {
+  background: #2b3a67;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover {
+  background: #1f2c53;
+}
+.message {
+  text-align: center;
+  color: green;
+  font-weight: bold;
+}
+#bookList {
+  margin-top: 30px;
+}
+.bookItem {
+  background: #f0f3f8;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 4px solid #2b3a67;
+}
+.bookItem h4 {
+  margin: 5px 0;
+}
+.deleteBtn {
+  background: #d63031;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  float: right;
+}
+.deleteBtn:hover {
+  background: #b22222;
+}
+#logoutBtn {
+  background: #e74c3c;
+}
+#logoutBtn:hover {
+  background: #c0392b;
+}
+</style>
+</head>
+<body>
+
+<header>Paneli i Administratorit</header>
+
+<div class="container" id="loginContainer">
+  <h2>Kyçu si Administrator</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Fjalëkalimi">
+  <button id="loginBtn">Kyçu</button>
+  <p class="message" id="loginMessage"></p>
+</div>
+
+<div class="container" id="adminPanel" style="display:none;">
+  <button id="logoutBtn">Dil</button>
+
+  <h2>Shto Kategori të Re</h2>
+  <input type="text" id="categoryName" placeholder="Emri i kategorisë">
+  <button id="addCategoryBtn">Shto Kategori</button>
+  <p class="message" id="categoryMsg"></p>
+
+  <hr>
+
+  <h2>Shto Libër të Ri</h2>
+  <input type="text" id="bookTitle" placeholder="Titulli">
+  <input type="text" id="bookAuthor" placeholder="Autori">
+  <input type="text" id="bookYear" placeholder="Viti">
+  <textarea id="bookDescription" placeholder="Përshkrimi"></textarea>
+  <input type="text" id="bookImageUrl" placeholder="Link i fotos (Drive)">
+  <input type="text" id="bookPdfUrl" placeholder="Link PDF (Drive)">
+  <select id="bookCategory"></select>
+  <button id="uploadBookBtn">Shto Librin</button>
+  <p class="message" id="uploadMessage"></p>
+
+  <hr>
+  <h2>Lista e Librave</h2>
+  <div id="bookList"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
+  authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
+  projectId: "bibliotekaapp-2f2b5",
+  storageBucket: "bibliotekaapp-2f2b5.appspot.com",
+  messagingSenderId: "1056004303783",
+  appId: "1:1056004303783:web:335725cdfeefc690702482",
+  measurementId: "G-QHEGWD5J2B"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Elemente
+const loginContainer = document.getElementById("loginContainer");
+const adminPanel = document.getElementById("adminPanel");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+// LOGIN
+loginBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("loginMessage");
+  msg.textContent = "Po kyç...";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    msg.textContent = "";
+  } catch {
+    msg.textContent = "Email ose fjalëkalim gabim!";
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginContainer.style.display = "none";
+    adminPanel.style.display = "block";
+    loadCategories();
+    loadBooks();
+  } else {
+    loginContainer.style.display = "block";
+    adminPanel.style.display = "none";
+  }
+});
+
+// KATEGORITË
+document.getElementById("addCategoryBtn").addEventListener("click", async () => {
+  const name = document.getElementById("categoryName").value;
+  const msg = document.getElementById("categoryMsg");
+  if (!name) return;
+  try {
+    await addDoc(collection(db, "categories"), { name });
+    msg.textContent = "✅ Kategoria u shtua!";
+    document.getElementById("categoryName").value = "";
+    loadCategories();
+  } catch (err) { msg.textContent = err.message; }
+});
+
+async function loadCategories() {
+  const bookCategory = document.getElementById("bookCategory");
+  bookCategory.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "categories"));
+  snapshot.forEach(doc => {
+    const opt = document.createElement("option");
+    opt.value = doc.data().name;
+    opt.textContent = doc.data().name;
+    bookCategory.appendChild(opt);
+  });
+}
+
+// SHTO LIBËR
+document.getElementById("uploadBookBtn").addEventListener("click", async () => {
+  const title = document.getElementById("bookTitle").value;
+  const author = document.getElementById("bookAuthor").value;
+  const year = document.getElementById("bookYear").value;
+  const description = document.getElementById("bookDescription").value;
+  const category = document.getElementById("bookCategory").value;
+  const imageUrl = document.getElementById("bookImageUrl").value;
+  const pdfUrl = document.getElementById("bookPdfUrl").value;
+  const msg = document.getElementById("uploadMessage");
+
+  if (!title || !author || !pdfUrl || !imageUrl) {
+    msg.textContent = "⚠️ Plotëso të gjitha fushat!";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "books"), {
+      title, author, year, description, category, pdfUrl, imageUrl, createdAt: new Date()
+    });
+    msg.textContent = "✅ Libri u shtua!";
+    loadBooks();
+  } catch (err) { msg.textContent = err.message; }
+});
+
+// SHFAQ LIBRAT
+async function loadBooks() {
+  const bookList = document.getElementById("bookList");
+  bookList.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "books"));
+  snapshot.forEach(b => {
+    const d = b.data();
+    const div = document.createElement("div");
+    div.className = "bookItem";
+    div.innerHTML = `
+      <h4>${d.title} - ${d.author}
+        <button class="deleteBtn" data-id="${b.id}">Fshi</button>
+      </h4>
+      <p><strong>Kategoria:</strong> ${d.category}</p>
+      <p><a href="${d.pdfUrl}" target="_blank">📖 PDF</a></p>
+    `;
+    bookList.appendChild(div);
+  });
+
+  document.querySelectorAll(".deleteBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      if (confirm("A je i sigurt që dëshiron ta fshish këtë libër?")) {
+        await deleteDoc(doc(db, "books", id));
+        loadBooks();
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
