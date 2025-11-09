@@ -29,7 +29,7 @@ header h1 {
     padding:7px 12px; 
     border-radius:5px; 
     border:none; 
-    width:90%; 
+    width:95%; 
     max-width:400px; 
     font-size:14px; 
 }
@@ -84,7 +84,7 @@ nav ul li:hover { background:#eee; }
     max-width:1000px; 
     margin:20px auto; 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
     gap:20px; 
     padding:0 10px; 
 }
@@ -100,9 +100,10 @@ nav ul li:hover { background:#eee; }
     cursor:pointer; 
     border:2px solid #2b3a67; 
     transition: transform 0.2s; 
+    width:100%; /* kartat të zgjasin gjithë hapësirën e kolonës */
 }
 .bookCard:hover { transform: translateY(-5px); }
-.bookCard img { width:140px; height:180px; object-fit:cover; border-radius:5px; }
+.bookCard img { width:100%; max-width:140px; height:auto; object-fit:cover; border-radius:5px; }
 .bookCard h3 { margin:10px 0 6px; font-size:16px; }
 .bookCard p { font-size:13px; margin:4px 0; }
 .bookCard a { display:inline-block; margin-top:6px; padding:6px 12px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; font-weight:bold; transition:0.3s; font-size:14px; }
@@ -116,15 +117,15 @@ nav ul li:hover { background:#eee; }
 
 /* Responsive */
 @media (max-width:800px) {
-  #booksContainer { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px; }
-  .bookCard img { width:120px; height:160px; }
+  #booksContainer { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px; }
+  .bookCard img { max-width:120px; }
   .bookCard h3 { font-size:14px; }
   .bookCard p { font-size:12px; }
   .bookCard a { font-size:12px; padding:4px 6px; }
 }
 @media (max-width:500px) {
-  #booksContainer { grid-template-columns: repeat(2, 1fr); gap:10px; padding:0 5px; }
-  .bookCard img { width:100px; height:140px; }
+  #booksContainer { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; padding:0 5px; }
+  .bookCard img { max-width:100px; }
   .bookCard h3 { font-size:13px; }
   .bookCard p { font-size:11px; }
   .bookCard a { font-size:11px; padding:3px 5px; }
