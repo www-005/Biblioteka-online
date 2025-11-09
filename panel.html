@@ -3,58 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C Panel - Biblioteka</title>
+<title>Biblioteka Online</title>
 <style>
 body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
-header { background:#2b3a67; color:white; display:flex; justify-content:center; align-items:center; padding:15px; }
-header h1 { margin:0; font-size:24px; }
+header { background:#2b3a67; color:white; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; position:relative; }
+header h1 { margin:0; font-size:24px; flex:1; text-align:center; }
+#burger { font-size:24px; cursor:pointer; margin-right:10px; }
+#searchBox { padding:5px 10px; border-radius:5px; border:none; width:250px; max-width:40%; }
+
+nav { display:none; background:white; padding:10px; position:absolute; top:50px; left:0; width:220px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:10; border-radius:5px; }
+nav ul { list-style:none; padding:0; margin:0; }
+nav ul li { padding:10px 0; border-bottom:1px solid #ccc; cursor:pointer; }
+nav ul li:hover { background:#eee; }
+
+#booksContainer {
+  max-width:1000px;
+  margin:20px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap:20px;
+}
+
+.bookCard {
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+}
+
+.bookCard img {
+  width:150px;
+  height:200px;
+  object-fit:cover;
+  border-radius:5px;
+}
+
+.bookCard h3 { margin:10px 0 5px; }
+.bookCard p { font-size:14px; margin:5px 0; }
+
+/* Modal per detajet e librit */
+#bookModal, #cPanelModal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+#bookModalContent, #cPanelContent {
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  max-width:400px;
+  width:90%;
+  max-height:90%;
+  overflow-y:auto;
+}
+#bookModalContent img { width:100%; height:auto; border-radius:5px; }
+#closeBookModal, #closeCPanel { cursor:pointer; float:right; font-size:18px; font-weight:bold; }
+
 .container { max-width:500px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
 h2 { text-align:center; }
 input, textarea, select, button { display:block; width:100%; margin:10px 0; padding:10px; border-radius:5px; border:1px solid #ccc; }
 button { background:#2b3a67; color:white; border:none; cursor:pointer; font-weight:bold; }
 .message { text-align:center; color:red; font-weight:bold; }
+
+/* Për telefon: 2 libra per rresht */
+@media (max-width:600px) {
+  #booksContainer { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>C Panel - Biblioteka</h1>
+  <div id="burger">&#9776;</div>
+  <h1>Biblioteka Online</h1>
+  <input type="text" id="searchBox" placeholder="Kërko libër ose autor...">
 </header>
 
-<!-- LOGIN ADMIN -->
-<div class="container" id="loginContainer">
-  <h2>Login Admin</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Fjalëkalimi">
-  <button id="loginBtn">Kyçu</button>
-  <p class="message" id="loginMessage"></p>
+<nav id="navMenu">
+  <ul>
+    <li id="cPanelLink">C Panel</li>
+    <li class="categoryItem" data-category="Romane">Romane</li>
+    <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
+    <li class="categoryItem" data-category="Te tjera">Të tjera</li>
+  </ul>
+</nav>
+
+<div id="booksContainer"></div>
+
+<!-- Modal per detajet e librit -->
+<div id="bookModal">
+  <div id="bookModalContent">
+    <span id="closeBookModal">✖</span>
+    <div id="modalContent"></div>
+  </div>
 </div>
 
-<!-- PANEL -->
-<div class="container" id="panelContainer" style="display:none;">
-  <h2>Shto kategori të re</h2>
-  <input type="text" id="categoryName" placeholder="Emri i kategorisë">
-  <button id="addCategoryBtn">Shto Kategori</button>
-  <p class="message" id="categoryMsg"></p>
+<!-- Modal per C Panel -->
+<div id="cPanelModal">
+  <div id="cPanelContent">
+    <span id="closeCPanel">✖</span>
+    <!-- LOGIN ADMIN -->
+    <div id="loginContainer">
+      <h2>Login Admin</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Fjalëkalimi">
+      <button id="loginBtn">Kyçu</button>
+      <p class="message" id="loginMessage"></p>
+    </div>
 
-  <hr>
+    <!-- PANEL -->
+    <div id="panelContainer" style="display:none;">
+      <h2>Shto kategori të re</h2>
+      <input type="text" id="categoryName" placeholder="Emri i kategorisë">
+      <button id="addCategoryBtn">Shto Kategori</button>
+      <p class="message" id="categoryMsg"></p>
 
-  <h2>Shto libër të ri</h2>
-  <input type="text" id="bookTitle" placeholder="Titulli i librit">
-  <input type="text" id="bookAuthor" placeholder="Autori">
-  <input type="text" id="bookYear" placeholder="Viti i botimit">
-  <textarea id="bookDescription" placeholder="Përshkrimi i librit"></textarea>
-  <input type="text" id="bookImageUrl" placeholder="Link i fotografisë nga Drive">
-  <input type="text" id="bookPdfUrl" placeholder="Link PDF nga Drive">
-  <select id="bookCategory"></select>
-  <button id="uploadBookBtn">Shto Librin</button>
-  <button id="logoutBtn">Dil</button>
-  <p class="message" id="uploadMessage"></p>
+      <hr>
+
+      <h2>Shto libër të ri</h2>
+      <input type="text" id="bookTitle" placeholder="Titulli i librit">
+      <input type="text" id="bookAuthor" placeholder="Autori">
+      <input type="text" id="bookYear" placeholder="Viti i botimit">
+      <textarea id="bookDescription" placeholder="Përshkrimi i librit"></textarea>
+      <input type="text" id="bookImageUrl" placeholder="Link i fotografisë nga Drive">
+      <input type="text" id="bookPdfUrl" placeholder="Link PDF nga Drive">
+      <select id="bookCategory"></select>
+      <button id="uploadBookBtn">Shto Librin</button>
+      <button id="logoutBtn">Dil</button>
+      <p class="message" id="uploadMessage"></p>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Firebase Config
@@ -73,13 +166,45 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // Elements
+const booksContainer = document.getElementById("booksContainer");
+const navMenu = document.getElementById("navMenu");
+const burger = document.getElementById("burger");
+const cPanelLink = document.getElementById("cPanelLink");
+const categoryItems = document.querySelectorAll(".categoryItem");
+const searchBox = document.getElementById("searchBox");
+
+const bookModal = document.getElementById("bookModal");
+const modalContent = document.getElementById("modalContent");
+const closeBookModal = document.getElementById("closeBookModal");
+
+const cPanelModal = document.getElementById("cPanelModal");
+const closeCPanel = document.getElementById("closeCPanel");
+
 const loginContainer = document.getElementById("loginContainer");
 const panelContainer = document.getElementById("panelContainer");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const loginMessage = document.getElementById("loginMessage");
-
 const bookCategory = document.getElementById("bookCategory");
+
+// Burger toggle
+burger.addEventListener("click", () => {
+  navMenu.style.display = navMenu.style.display === "block" ? "none" : "block";
+});
+
+// C Panel modal
+cPanelLink.addEventListener("click", () => {
+  cPanelModal.style.display = "flex";
+});
+
+// Close modals
+closeBookModal.addEventListener("click", () => {
+  bookModal.style.display = "none";
+  if(history.state && history.state.modal) history.back();
+});
+closeCPanel.addEventListener("click", () => {
+  cPanelModal.style.display = "none";
+});
 
 // LOGIN ADMIN
 loginBtn.addEventListener("click", async () => {
@@ -102,12 +227,12 @@ logoutBtn.addEventListener("click", async () => {
 // Kontrollo nëse admin është kyçur
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    loginContainer.style.display = "none";   // fsheh login
-    panelContainer.style.display = "block";  // shfaq panelin
+    loginContainer.style.display = "none";
+    panelContainer.style.display = "block";
     loadCategories();
   } else {
-    loginContainer.style.display = "block";  // shfaq login
-    panelContainer.style.display = "none";   // fsheh panelin
+    loginContainer.style.display = "block";
+    panelContainer.style.display = "none";
   }
 });
 
@@ -164,6 +289,72 @@ document.getElementById("uploadBookBtn").addEventListener("click", async () => {
     document.getElementById("bookPdfUrl").value = "";
   } catch (err) { uploadMessage.textContent = err.message; }
 });
+
+// Ngarko librat
+async function loadBooks(category = null, searchText = "") {
+  booksContainer.innerHTML = "";
+  let booksQuery = collection(db, "books");
+  if(category) {
+    booksQuery = query(collection(db, "books"), where("category","==",category));
+  }
+  const snapshot = await getDocs(booksQuery);
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if(searchText && !(
+      data.title.toLowerCase().includes(searchText.toLowerCase()) || 
+      data.author.toLowerCase().includes(searchText.toLowerCase())
+    )) return;
+
+    const div = document.createElement("div");
+    div.className = "bookCard";
+    div.innerHTML = `
+      <img src="${data.imageUrl}" alt="${data.title}">
+      <h3>${data.title}</h3>
+      <p><strong>Autor:</strong> ${data.author}</p>
+      <p><strong>Viti:</strong> ${data.year}</p>
+    `;
+    div.addEventListener("click", () => showBookModal(data));
+    booksContainer.appendChild(div);
+  });
+}
+
+// Modal libri
+function showBookModal(bookData) {
+  modalContent.innerHTML = `
+    <h2>${bookData.title}</h2>
+    <p><strong>Autor:</strong> ${bookData.author}</p>
+    <p><strong>Viti:</strong> ${bookData.year}</p>
+    <img src="${bookData.imageUrl}" alt="${bookData.title}">
+    <p>${bookData.description}</p>
+    <a href="${bookData.pdfUrl}" target="_blank">Shkarko PDF</a>
+  `;
+  bookModal.style.display = "flex";
+  history.pushState({modal:true}, "book", "#book");
+}
+
+// Back button i telefonit
+window.addEventListener("popstate", (e) => {
+  if(bookModal.style.display === "flex") bookModal.style.display = "none";
+  if(cPanelModal.style.display === "flex") cPanelModal.style.display = "none";
+});
+
+// Filtrimi sipas kategorive
+categoryItems.forEach(item => {
+  item.addEventListener("click", () => {
+    const selectedCategory = item.dataset.category;
+    loadBooks(selectedCategory, searchBox.value);
+    navMenu.style.display = "none";
+  });
+});
+
+// Filtrimi sipas kërkimit
+searchBox.addEventListener("input", () => {
+  loadBooks(null, searchBox.value);
+});
+
+// Ngarko librat fillimisht
+loadBooks();
+
 </script>
 </body>
 </html>
