@@ -33,6 +33,7 @@ nav ul li:hover { background:#eee; }
   display:flex;
   flex-direction:column;
   align-items:center;
+  cursor:pointer;
 }
 
 .bookCard img {
@@ -54,11 +55,31 @@ nav ul li:hover { background:#eee; }
   text-decoration:none;
 }
 
-/* Për telefon: 2 libra per rresht */
+/* Modal per detajet e librit */
+#bookModal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+#bookModalContent {
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  max-width:400px;
+  width:90%;
+  max-height:90%;
+  overflow-y:auto;
+}
+#bookModalContent img { width:100%; height:auto; border-radius:5px; }
+#closeModal { cursor:pointer; float:right; font-size:18px; font-weight:bold; }
+
 @media (max-width:600px) {
-  #booksContainer {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  #booksContainer { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -80,6 +101,14 @@ nav ul li:hover { background:#eee; }
 </nav>
 
 <div id="booksContainer"></div>
+
+<!-- Modal per detajet e librit -->
+<div id="bookModal">
+  <div id="bookModalContent">
+    <span id="closeModal">✖</span>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -106,17 +135,22 @@ const cPanelLink = document.getElementById("cPanelLink");
 const categoryItems = document.querySelectorAll(".categoryItem");
 const searchBox = document.getElementById("searchBox");
 
-// Burger menu toggle
+// Modal
+const bookModal = document.getElementById("bookModal");
+const modalContent = document.getElementById("modalContent");
+const closeModal = document.getElementById("closeModal");
+
+// Burger toggle
 burger.addEventListener("click", () => {
   navMenu.style.display = navMenu.style.display === "block" ? "none" : "block";
 });
 
-// Kur klikon C Panel hap panel.html
+// C Panel
 cPanelLink.addEventListener("click", () => {
   window.location.href = "panel.html";
 });
 
-// Ngarko librat nga Firestore
+// Ngarko librat
 async function loadBooks(category = null, searchText = "") {
   booksContainer.innerHTML = "";
   let booksQuery = collection(db, "books");
@@ -126,7 +160,6 @@ async function loadBooks(category = null, searchText = "") {
   const snapshot = await getDocs(booksQuery);
   snapshot.forEach(doc => {
     const data = doc.data();
-    // Filtrimi sipas kërkimit
     if(searchText && !(
       data.title.toLowerCase().includes(searchText.toLowerCase()) || 
       data.author.toLowerCase().includes(searchText.toLowerCase())
@@ -139,11 +172,40 @@ async function loadBooks(category = null, searchText = "") {
       <h3>${data.title}</h3>
       <p><strong>Autor:</strong> ${data.author}</p>
       <p><strong>Viti:</strong> ${data.year}</p>
-      <p>${data.description}</p>
-      <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
     `;
+    div.addEventListener("click", () => showBookModal(data));
     booksContainer.appendChild(div);
   });
+}
+
+// Modal funksion
+function showBookModal(bookData) {
+  modalContent.innerHTML = `
+    <h2>${bookData.title}</h2>
+    <p><strong>Autor:</strong> ${bookData.author}</p>
+    <p><strong>Viti:</strong> ${bookData.year}</p>
+    <img src="${bookData.imageUrl}" alt="${bookData.title}">
+    <p>${bookData.description}</p>
+    <a href="${bookData.pdfUrl}" target="_blank">Shkarko PDF</a>
+  `;
+  bookModal.style.display = "flex";
+  history.pushState({modal:true}, "book", "#book"); // shto state në historik
+}
+
+closeModal.addEventListener("click", closeBookModal);
+
+// Back button i telefonit
+window.addEventListener("popstate", (e) => {
+  if(bookModal.style.display === "flex") {
+    closeBookModal();
+  }
+});
+
+function closeBookModal() {
+  bookModal.style.display = "none";
+  if(history.state && history.state.modal) {
+    history.back(); // heq state-in e modal
+  }
 }
 
 // Filtrimi sipas kategorive
@@ -151,7 +213,7 @@ categoryItems.forEach(item => {
   item.addEventListener("click", () => {
     const selectedCategory = item.dataset.category;
     loadBooks(selectedCategory, searchBox.value);
-    navMenu.style.display = "none"; // mbyllet burger menu pas klikimit
+    navMenu.style.display = "none";
   });
 });
 
@@ -160,7 +222,7 @@ searchBox.addEventListener("input", () => {
   loadBooks(null, searchBox.value);
 });
 
-// Ngarko të gjithë librat në fillim
+// Ngarko librat fillimisht
 loadBooks();
 </script>
 
