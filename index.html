@@ -14,18 +14,26 @@ nav { display:none; background:white; padding:10px; position:absolute; top:50px;
 nav ul { list-style:none; padding:0; margin:0; }
 nav ul li { padding:10px 0; border-bottom:1px solid #ccc; cursor:pointer; }
 nav ul li:hover { background:#eee; }
+nav #closeNav { text-align:right; font-size:20px; cursor:pointer; margin-bottom:5px; display:block; }
+
 #booksContainer { max-width:1000px; margin:20px auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; }
-.bookCard { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2); text-align:center; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.bookCard { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2); text-align:center; display:flex; flex-direction:column; align-items:center; cursor:pointer; border: 2px solid #2b3a67; }
 .bookCard img { width:150px; height:200px; object-fit:cover; border-radius:5px; }
 .bookCard h3 { margin:10px 0 5px; }
 .bookCard p { font-size:14px; margin:5px 0; }
-.bookCard a { display:inline-block; margin-top:5px; padding:5px 10px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; }
+.bookCard a { display:inline-block; margin-top:10px; padding:7px 12px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; font-weight:bold; transition: 0.3s; }
+.bookCard a:hover { background:#1d2750; }
+
 /* Modal per detajet e librit */
 #bookModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; }
-#bookModalContent { background:white; padding:20px; border-radius:10px; max-width:400px; width:90%; max-height:90%; overflow-y:auto; }
+#bookModalContent { background:white; padding:20px; border-radius:10px; max-width:400px; width:90%; max-height:90%; overflow-y:auto; position:relative; }
 #bookModalContent img { width:100%; height:auto; border-radius:5px; }
-#closeModal { cursor:pointer; float:right; font-size:18px; font-weight:bold; }
-@media (max-width:600px) { #booksContainer { grid-template-columns: repeat(2, 1fr); } }
+#closeModal { cursor:pointer; float:right; font-size:22px; font-weight:bold; }
+
+@media (max-width:600px) { 
+  #booksContainer { grid-template-columns: repeat(2, 1fr); } 
+  #searchBox { width:120px; }
+}
 </style>
 </head>
 <body>
@@ -35,14 +43,18 @@ nav ul li:hover { background:#eee; }
   <input type="text" id="searchBox" placeholder="Kërko libër ose autor...">
 </header>
 <nav id="navMenu">
+  <span id="closeNav">✖</span>
   <ul>
-    <li id="cPanelLink">C Panel</li>
+    <li class="categoryItem" data-category="">Të gjitha</li>
     <li class="categoryItem" data-category="Romane">Romane</li>
     <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
     <li class="categoryItem" data-category="Te tjera">Të tjera</li>
+    <li id="cPanelLink">C Panel</li>
   </ul>
 </nav>
+
 <div id="booksContainer"></div>
+
 <!-- Modal per detajet e librit -->
 <div id="bookModal">
   <div id="bookModalContent">
@@ -50,11 +62,11 @@ nav ul li:hover { background:#eee; }
     <div id="modalContent"></div>
   </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
   authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
@@ -75,35 +87,27 @@ const cPanelLink = document.getElementById("cPanelLink");
 const categoryItems = document.querySelectorAll(".categoryItem");
 const searchBox = document.getElementById("searchBox");
 
-// Modal
 const bookModal = document.getElementById("bookModal");
 const modalContent = document.getElementById("modalContent");
 const closeModal = document.getElementById("closeModal");
+const closeNav = document.getElementById("closeNav");
 
 // Burger toggle
-burger.addEventListener("click", () => {
-  navMenu.style.display = navMenu.style.display === "block" ? "none" : "block";
-});
+burger.addEventListener("click", () => { navMenu.style.display = "block"; });
+closeNav.addEventListener("click", () => { navMenu.style.display = "none"; });
 
 // C Panel
-cPanelLink.addEventListener("click", () => {
-  window.location.href = "panel.html";
-});
+cPanelLink.addEventListener("click", () => { window.location.href = "panel.html"; });
 
 // Ngarko librat
 async function loadBooks(category = null, searchText = "") {
   booksContainer.innerHTML = "";
   let booksQuery = collection(db, "books");
-  if(category) {
-    booksQuery = query(collection(db, "books"), where("category","==",category));
-  }
+  if(category) booksQuery = query(collection(db, "books"), where("category","==",category));
   const snapshot = await getDocs(booksQuery);
   snapshot.forEach(doc => {
     const data = doc.data();
-    if(searchText && !( 
-      data.title.toLowerCase().includes(searchText.toLowerCase()) || 
-      data.author.toLowerCase().includes(searchText.toLowerCase()) 
-    )) return;
+    if(searchText && !(data.title.toLowerCase().includes(searchText.toLowerCase()) || data.author.toLowerCase().includes(searchText.toLowerCase()))) return;
     const div = document.createElement("div");
     div.className = "bookCard";
     div.innerHTML = `
@@ -111,6 +115,7 @@ async function loadBooks(category = null, searchText = "") {
       <h3>${data.title}</h3>
       <p><strong>Autor:</strong> ${data.author}</p>
       <p><strong>Viti:</strong> ${data.year}</p>
+      <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
     `;
     div.addEventListener("click", () => showBookModal(data));
     booksContainer.appendChild(div);
@@ -131,15 +136,12 @@ function showBookModal(bookData) {
 }
 
 // Close modal
-function closeBookModal() {
-  bookModal.style.display = "none";
-}
-closeModal.addEventListener("click", closeBookModal);
+closeModal.addEventListener("click", () => { bookModal.style.display = "none"; });
 
 // Filtrimi sipas kategorive
 categoryItems.forEach(item => {
   item.addEventListener("click", () => {
-    const selectedCategory = item.dataset.category;
+    const selectedCategory = item.dataset.category || null;
     loadBooks(selectedCategory, searchBox.value);
     navMenu.style.display = "none";
   });
