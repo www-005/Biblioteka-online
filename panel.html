@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Panel - Biblioteka</title>
+<style>
+body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
+header { background:#2b3a67; color:white; display:flex; justify-content:center; align-items:center; padding:15px; }
+header h1 { margin:0; font-size:24px; }
+.container { max-width:500px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
+h2 { text-align:center; }
+input, textarea, select, button { display:block; width:100%; margin:10px 0; padding:10px; border-radius:5px; border:1px solid #ccc; }
+button { background:#2b3a67; color:white; border:none; cursor:pointer; font-weight:bold; }
+.message { text-align:center; color:red; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>C Panel - Biblioteka</h1>
+</header>
+
+<!-- LOGIN ADMIN -->
+<div class="container" id="loginContainer">
+  <h2>Login Admin</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Fjalëkalimi">
+  <button id="loginBtn">Kyçu</button>
+  <p class="message" id="loginMessage"></p>
+</div>
+
+<!-- PANEL -->
+<div class="container" id="panelContainer" style="display:none;">
+  <h2>Shto kategori të re</h2>
+  <input type="text" id="categoryName" placeholder="Emri i kategorisë">
+  <button id="addCategoryBtn">Shto Kategori</button>
+  <p class="message" id="categoryMsg"></p>
+
+  <hr>
+
+  <h2>Shto libër të ri</h2>
+  <input type="text" id="bookTitle" placeholder="Titulli i librit">
+  <input type="text" id="bookAuthor" placeholder="Autori">
+  <input type="text" id="bookYear" placeholder="Viti i botimit">
+  <textarea id="bookDescription" placeholder="Përshkrimi i librit"></textarea>
+  <input type="text" id="bookImageUrl" placeholder="Link i fotografisë nga Drive/Imgur">
+  <input type="text" id="bookPdfUrl" placeholder="Link PDF nga Drive">
+  <select id="bookCategory"></select>
+  <button id="uploadBookBtn">Shto Librin</button>
+  <button id="logoutBtn">Dil</button>
+  <p class="message" id="uploadMessage"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
+  authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
+  projectId: "bibliotekaapp-2f2b5",
+  storageBucket: "bibliotekaapp-2f2b5.appspot.com",
+  messagingSenderId: "1056004303783",
+  appId: "1:1056004303783:web:335725cdfeefc690702482",
+  measurementId: "G-QHEGWD5J2B"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Elements
+const loginContainer = document.getElementById("loginContainer");
+const panelContainer = document.getElementById("panelContainer");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginMessage = document.getElementById("loginMessage");
+const bookCategory = document.getElementById("bookCategory");
+
+// LOGIN ADMIN
+loginBtn.addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  loginMessage.textContent = "Po kyç…";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    loginMessage.textContent = "";
+  } catch (err) {
+    loginMessage.textContent = "Email ose fjalëkalim gabim!";
+  }
+});
+
+// LOGOUT
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+// Kontrollo nëse admin është kyçur
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginContainer.style.display = "none";   // fsheh login
+    panelContainer.style.display = "block";  // shfaq panelin
+    loadCategories();
+  } else {
+    loginContainer.style.display = "block";  // shfaq login
+    panelContainer.style.display = "none";   // fsheh panelin
+  }
+});
+
+// Shto kategori
+document.getElementById("addCategoryBtn").addEventListener("click", async () => {
+  const name = document.getElementById("categoryName").value;
+  const msg = document.getElementById("categoryMsg");
+  if (!name) return;
+  try {
+    await addDoc(collection(db, "categories"), { name });
+    msg.textContent = "✅ Kategoria u shtua!";
+    document.getElementById("categoryName").value = "";
+    loadCategories();
+  } catch (err) { msg.textContent = err.message; }
+});
+
+// Ngarko kategoritë
+async function loadCategories() {
+  bookCategory.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "categories"));
+  snapshot.forEach(doc => {
+    const opt = document.createElement("option");
+    opt.value = doc.data().name;
+    opt.textContent = doc.data().name;
+    bookCategory.appendChild(opt);
+  });
+}
+
+// Shto libër
+document.getElementById("uploadBookBtn").addEventListener("click", async () => {
+  const title = document.getElementById("bookTitle").value;
+  const author = document.getElementById("bookAuthor").value;
+  const year = document.getElementById("bookYear").value;
+  const description = document.getElementById("bookDescription").value;
+  const category = bookCategory.value;
+  const imageUrl = document.getElementById("bookImageUrl").value;
+  const pdfUrl = document.getElementById("bookPdfUrl").value;
+  const uploadMessage = document.getElementById("uploadMessage");
+
+  if (!pdfUrl) { uploadMessage.textContent = "Vendos link PDF!"; return; }
+  if (!imageUrl) { uploadMessage.textContent = "Vendos link të fotografisë!"; return; }
+
+  try {
+    await addDoc(collection(db, "books"), {
+      title, author, year, description, category, pdfUrl, imageUrl, createdAt: new Date()
+    });
+
+    uploadMessage.textContent = "✅ Libri u shtua!";
+    document.getElementById("bookTitle").value = "";
+    document.getElementById("bookAuthor").value = "";
+    document.getElementById("bookYear").value = "";
+    document.getElementById("bookDescription").value = "";
+    document.getElementById("bookImageUrl").value = "";
+    document.getElementById("bookPdfUrl").value = "";
+  } catch (err) { uploadMessage.textContent = err.message; }
+});
+</script>
+</body>
+</html>
+
 
