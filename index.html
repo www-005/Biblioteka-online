@@ -121,7 +121,7 @@ nav ul li:hover {
 }
 
 /* Modal */
-#bookModal {
+#bookModal, #cPanelModal {
   display:none;
   position:fixed;
   top:0;
@@ -134,15 +134,14 @@ nav ul li:hover {
   z-index:100;
 }
 
-#bookModalContent {
+#bookModalContent, #cPanelContent {
   background:white;
   padding:20px;
   border-radius:10px;
-  max-width:400px;
+  max-width:450px;
   width:90%;
   max-height:90%;
   overflow-y:auto;
-  box-shadow:0 2px 10px rgba(0,0,0,0.3);
   border:2px solid #2b3a67;
 }
 
@@ -152,12 +151,35 @@ nav ul li:hover {
   border-radius:5px;
 }
 
-#closeModal {
+#closeModal, #closeCPanel {
   cursor:pointer;
   float:right;
-  font-size:18px;
+  font-size:20px;
   font-weight:bold;
   color:#2b3a67;
+}
+
+input, textarea, select, button {
+  display:block;
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+  border-radius:5px;
+  border:1px solid #ccc;
+}
+
+button {
+  background:#2b3a67;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.message {
+  text-align:center;
+  color:red;
+  font-weight:bold;
 }
 
 @media (max-width:600px) {
@@ -181,13 +203,13 @@ nav ul li:hover {
     <li id="cPanelLink">C Panel</li>
     <li class="categoryItem" data-category="Romane">Romane</li>
     <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
-    <li class="categoryItem" data-category="Te tjera">Të tjera</li>
+    <li class="categoryItem" data-category="Të tjera">Të tjera</li>
   </ul>
 </nav>
 
 <div id="booksContainer"></div>
 
-<!-- Modal për detajet e librit -->
+<!-- Modal Libri -->
 <div id="bookModal">
   <div id="bookModalContent">
     <span id="closeModal">✖</span>
@@ -195,9 +217,44 @@ nav ul li:hover {
   </div>
 </div>
 
+<!-- Modal C Panel -->
+<div id="cPanelModal">
+  <div id="cPanelContent">
+    <span id="closeCPanel">✖</span>
+
+    <div id="loginContainer">
+      <h2>Login Admin</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Fjalëkalimi">
+      <button id="loginBtn">Kyçu</button>
+      <p class="message" id="loginMessage"></p>
+    </div>
+
+    <div id="panelContainer" style="display:none;">
+      <h2>Shto kategori të re</h2>
+      <input type="text" id="categoryName" placeholder="Emri i kategorisë">
+      <button id="addCategoryBtn">Shto Kategori</button>
+      <p class="message" id="categoryMsg"></p>
+      <hr>
+      <h2>Shto libër të ri</h2>
+      <input type="text" id="bookTitle" placeholder="Titulli">
+      <input type="text" id="bookAuthor" placeholder="Autori">
+      <input type="text" id="bookYear" placeholder="Viti">
+      <textarea id="bookDescription" placeholder="Përshkrimi"></textarea>
+      <input type="text" id="bookImageUrl" placeholder="Link i fotos (Drive)">
+      <input type="text" id="bookPdfUrl" placeholder="Link PDF (Drive)">
+      <select id="bookCategory"></select>
+      <button id="uploadBookBtn">Shto Librin</button>
+      <button id="logoutBtn">Dil</button>
+      <p class="message" id="uploadMessage"></p>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Firebase Config
 const firebaseConfig = {
@@ -212,6 +269,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const booksContainer = document.getElementById("booksContainer");
 const navMenu = document.getElementById("navMenu");
@@ -220,97 +278,158 @@ const cPanelLink = document.getElementById("cPanelLink");
 const categoryItems = document.querySelectorAll(".categoryItem");
 const searchBox = document.getElementById("searchBox");
 
-// Modal
 const bookModal = document.getElementById("bookModal");
 const modalContent = document.getElementById("modalContent");
 const closeModal = document.getElementById("closeModal");
 
-// Burger toggle me X
+const cPanelModal = document.getElementById("cPanelModal");
+const closeCPanel = document.getElementById("closeCPanel");
+
+const loginContainer = document.getElementById("loginContainer");
+const panelContainer = document.getElementById("panelContainer");
+const bookCategory = document.getElementById("bookCategory");
+
+// --- BURGER MENU ---
 burger.addEventListener("click", () => {
   const open = navMenu.style.display === "block";
   navMenu.style.display = open ? "none" : "block";
   burger.innerHTML = open ? "&#9776;" : "✖";
 });
 
-// C Panel
+// --- C PANEL MODAL ---
 cPanelLink.addEventListener("click", () => {
-  window.location.href = "panel.html";
+  cPanelModal.style.display = "flex";
+  navMenu.style.display = "none";
+  burger.innerHTML = "&#9776;";
 });
 
-// Ngarko librat
+// --- CLOSE MODALS ---
+closeBookModal.addEventListener("click", () => bookModal.style.display = "none");
+closeCPanel.addEventListener("click", () => cPanelModal.style.display = "none");
+
+// --- LOGIN ADMIN ---
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("loginMessage");
+  msg.textContent = "Po kyç...";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    msg.textContent = "";
+  } catch {
+    msg.textContent = "Email ose fjalëkalim gabim!";
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginContainer.style.display = "none";
+    panelContainer.style.display = "block";
+    loadCategories();
+  } else {
+    loginContainer.style.display = "block";
+    panelContainer.style.display = "none";
+  }
+});
+
+// --- KATEGORITË ---
+document.getElementById("addCategoryBtn").addEventListener("click", async () => {
+  const name = document.getElementById("categoryName").value;
+  const msg = document.getElementById("categoryMsg");
+  if (!name) return;
+  try {
+    await addDoc(collection(db, "categories"), { name });
+    msg.textContent = "✅ Kategoria u shtua!";
+    document.getElementById("categoryName").value = "";
+    loadCategories();
+  } catch (err) { msg.textContent = err.message; }
+});
+
+async function loadCategories() {
+  bookCategory.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "categories"));
+  snapshot.forEach(doc => {
+    const opt = document.createElement("option");
+    opt.value = doc.data().name;
+    opt.textContent = doc.data().name;
+    bookCategory.appendChild(opt);
+  });
+}
+
+// --- SHTO LIBËR ---
+document.getElementById("uploadBookBtn").addEventListener("click", async () => {
+  const title = document.getElementById("bookTitle").value;
+  const author = document.getElementById("bookAuthor").value;
+  const year = document.getElementById("bookYear").value;
+  const description = document.getElementById("bookDescription").value;
+  const category = bookCategory.value;
+  const imageUrl = document.getElementById("bookImageUrl").value;
+  const pdfUrl = document.getElementById("bookPdfUrl").value;
+  const msg = document.getElementById("uploadMessage");
+
+  if (!pdfUrl || !imageUrl) { msg.textContent = "Vendos link PDF dhe Foto!"; return; }
+
+  try {
+    await addDoc(collection(db, "books"), {
+      title, author, year, description, category, pdfUrl, imageUrl, createdAt: new Date()
+    });
+    msg.textContent = "✅ Libri u shtua!";
+  } catch (err) { msg.textContent = err.message; }
+});
+
+// --- NGARKO LIBRAT ---
 async function loadBooks(category = null, searchText = "") {
   booksContainer.innerHTML = "";
-  let booksQuery = collection(db, "books");
-  if (category && category !== "Të gjitha") {
-    booksQuery = query(collection(db, "books"), where("category","==",category));
+  let q = collection(db, "books");
+  if(category && category !== "Të gjitha") {
+    q = query(q, where("category","==",category));
   }
-
-  const snapshot = await getDocs(booksQuery);
+  const snapshot = await getDocs(q);
   snapshot.forEach(doc => {
-    const data = doc.data();
-    if (searchText && !(
-      data.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      data.author.toLowerCase().includes(searchText.toLowerCase())
-    )) return;
-
+    const d = doc.data();
+    if(searchText && !(d.title.toLowerCase().includes(searchText.toLowerCase()) || d.author.toLowerCase().includes(searchText.toLowerCase()))) return;
     const div = document.createElement("div");
     div.className = "bookCard";
     div.innerHTML = `
-      <img src="${data.imageUrl}" alt="${data.title}">
-      <h3>${data.title}</h3>
-      <p><strong>Autor:</strong> ${data.author}</p>
-      <p><strong>Viti:</strong> ${data.year}</p>
+      <img src="${d.imageUrl}" alt="${d.title}">
+      <h3>${d.title}</h3>
+      <p><strong>Autor:</strong> ${d.author}</p>
+      <p><strong>Viti:</strong> ${d.year}</p>
     `;
-    div.addEventListener("click", () => showBookModal(data));
+    div.addEventListener("click", () => showBookModal(d));
     booksContainer.appendChild(div);
   });
 }
 
-// Modal funksion
-function showBookModal(bookData) {
+// --- MODAL LIBRI ---
+function showBookModal(b) {
   modalContent.innerHTML = `
-    <h2>${bookData.title}</h2>
-    <p><strong>Autor:</strong> ${bookData.author}</p>
-    <p><strong>Viti:</strong> ${bookData.year}</p>
-    <img src="${bookData.imageUrl}" alt="${bookData.title}">
-    <p>${bookData.description}</p>
-    <a href="${bookData.pdfUrl}" target="_blank">Shkarko PDF</a>
+    <h2>${b.title}</h2>
+    <p><strong>Autor:</strong> ${b.author}</p>
+    <p><strong>Viti:</strong> ${b.year}</p>
+    <img src="${b.imageUrl}" alt="${b.title}">
+    <p>${b.description}</p>
+    <a href="${b.pdfUrl}" target="_blank">📖 Shkarko PDF</a>
   `;
   bookModal.style.display = "flex";
-  history.pushState({modal:true}, "book", "#book");
 }
 
-closeModal.addEventListener("click", closeBookModal);
-
-window.addEventListener("popstate", (e) => {
-  if (bookModal.style.display === "flex") {
-    closeBookModal();
-  }
-});
-
-function closeBookModal() {
-  bookModal.style.display = "none";
-  if (history.state && history.state.modal) {
-    history.back();
-  }
-}
-
-// Filtrimi sipas kategorive
+// --- FILTRAT ---
 categoryItems.forEach(item => {
   item.addEventListener("click", () => {
-    const selectedCategory = item.dataset.category;
-    loadBooks(selectedCategory, searchBox.value);
+    const cat = item.dataset.category;
+    loadBooks(cat, searchBox.value);
     navMenu.style.display = "none";
     burger.innerHTML = "&#9776;";
   });
 });
+searchBox.addEventListener("input", () => loadBooks(null, searchBox.value));
 
-// Filtrimi sipas kërkimit
-searchBox.addEventListener("input", () => {
-  loadBooks(null, searchBox.value);
-});
-
-// Ngarko librat fillimisht
+// --- START ---
 loadBooks();
 </script>
 
