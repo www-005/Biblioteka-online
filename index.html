@@ -698,7 +698,7 @@ ${year}
 div.onclick=(e)=>{
 
 
-if(e.target.tagName!="A"){
+if(!e.target.closest("a")){
 
 showBookModal(data);
 
@@ -762,7 +762,7 @@ ${book.description || ""}
 
 
 
-<a href="${book.pdfUrl}">
+<a href="${book.pdfUrl}" onclick="window.open(this.href,'_blank'); return false;">
 📥 Shkarko PDF
 </a>
 
