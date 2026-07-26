@@ -3,11 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Biblioteka Online</title>
-<style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
 
-/* Header */
+<title>Biblioteka Online</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    background:#f5f5f5;
+}
+
+
+/* HEADER */
+
 header { 
     background:#2b3a67; 
     color:white; 
@@ -18,15 +28,15 @@ header {
     justify-content:center; 
     position:relative; 
 }
+
+
 header h1 { 
     margin:0; 
     font-size:24px; 
     text-align:center; 
-    width:100%; 
 }
-    .bookTitle, .bookAuthor, .bookYear {
-  font-weight: bold !important;
-}
+
+
 #searchBox { 
     margin-top:10px; 
     padding:7px 12px; 
@@ -37,7 +47,16 @@ header h1 {
     font-size:14px; 
 }
 
-/* Burger menu */
+
+.bookTitle,
+.bookAuthor,
+.bookYear {
+    font-weight:bold;
+}
+
+
+/* BURGER */
+
 #burger { 
     font-size:28px; 
     cursor:pointer; 
@@ -45,19 +64,12 @@ header h1 {
     left:25px; 
     top:15px; 
     color:white; 
-    z-index:20; 
-}
-    /* Close nav (iks) */
-#closeNav { 
-    text-align:right; 
-    font-size:25px; 
-    cursor:pointer; 
-    margin-bottom:10px;
-    display:block;
-    padding-right:10px; /* largimi nga skaji djathtas */
 }
 
-/* Navigation Menu */
+
+
+/* MENU */
+
 nav { 
     display:none; 
     background:white; 
@@ -72,36 +84,52 @@ nav {
     border-radius:0 10px 10px 0; 
     overflow-y:auto;
 }
+
+
+#closeNav { 
+    text-align:right;
+    font-size:25px;
+    cursor:pointer;
+    display:block;
+}
+
+
 nav ul { 
     list-style:none; 
-    padding:0; 
-    margin:0; 
-    margin-top:30px; 
+    padding:0;
+    margin-top:30px;
 }
+
+
 nav ul li { 
     padding:12px 10px; 
     border-bottom:1px solid #ccc; 
     cursor:pointer; 
     font-weight:bold; 
 }
-nav ul li:hover { background:#eee; }
-#closeNav { 
-    text-align:right; 
-    font-size:25px; 
-    cursor:pointer; 
-    margin-bottom:10px;
+
+
+nav ul li:hover {
+    background:#eee;
 }
 
-/* Books container */
+
+
+/* LIBRAT */
+
 #booksContainer { 
     max-width:1000px; 
     margin:20px auto; 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    display:grid; 
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); 
     gap:15px; 
     padding:0 10px; 
 }
+
+
+
 .bookCard { 
+
     background:white; 
     padding:10px; 
     border-radius:10px; 
@@ -112,170 +140,686 @@ nav ul li:hover { background:#eee; }
     align-items:center; 
     cursor:pointer; 
     border:2px solid #2b3a67; 
-    transition: transform 0.2s, box-shadow 0.2s; 
+    transition:0.2s;
+
+}
+
+
+
+.bookCard:hover { 
+    transform:translateY(-3px);
+}
+
+
+
+.bookCard img { 
+    width:140px; 
+    height:180px; 
+    object-fit:cover; 
+    border-radius:5px; 
+}
+
+
+
+.bookCard h3 { 
+    margin:10px 0 6px; 
+    font-size:16px; 
+}
+
+
+
+.bookCard p { 
+    font-size:13px; 
+    margin:4px 0; 
+}
+
+
+
+.bookCard a {
+
+    display:inline-block;
+    margin-top:8px;
+    padding:7px 12px;
+    background:#2b3a67;
+    color:white;
+    border-radius:5px;
+    text-decoration:none;
+    font-weight:bold;
+
+}
+
+
+
+/* MODAL */
+
+#bookModal {
+
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
     width:100%;
-    box-sizing:border-box;
-}
-.bookCard:hover { transform: translateY(-3px); box-shadow:0 4px 8px rgba(0,0,0,0.3); }
-.bookCard img { width:140px; height:180px; object-fit:cover; border-radius:5px; }
-.bookCard h3 { margin:10px 0 6px; font-size:16px; }
-.bookCard p { font-size:13px; margin:4px 0; }
-.bookCard a { display:inline-block; margin-top:6px; padding:6px 12px; background:#2b3a67; color:white; border-radius:5px; text-decoration:none; font-weight:bold; transition:0.3s; font-size:14px; }
-.bookCard a:hover { background:#1d2750; }
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    z-index:100;
+    padding:10px;
 
-/* Modal */
-#bookModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; padding:10px; }
-#bookModalContent { background:white; padding:20px; border-radius:10px; max-width:400px; width:100%; max-height:90%; overflow-y:auto; position:relative; }
-#bookModalContent img { width:100%; height:auto; border-radius:5px; }
-#closeModal { cursor:pointer; float:right; font-size:22px; font-weight:bold; }
-
-/* Responsive */
-@media (max-width:800px) {
-  #booksContainer { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; }
-  .bookCard img { width:120px; height:160px; }
-  .bookCard h3 { font-size:14px; font-weight:bold;}
-  .bookCard p { font-size:12px; font-weight:bold; margin:2px 0;}
-  .bookCard a { font-size:12px; padding:4px 6px; }
 }
 
-@media (max-width:500px) {
-  #booksContainer { grid-template-columns: repeat(2, 1fr); gap:10px; padding:0 5px; }
-  .bookCard img { width:110px; height:150px; }
-  .bookCard h3 { font-size:13px; font-weight:bold; }
-  .bookCard p { font-size:11px; font-weight:bold; margin:2px 0; }
-  .bookCard a { font-size:11px; padding:3px 5px; }
+
+
+#bookModalContent {
+
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    max-width:400px;
+    width:100%;
+    max-height:90%;
+    overflow-y:auto;
+
 }
+
+
+
+#bookModalContent img {
+
+    width:100%;
+    border-radius:5px;
+
+}
+
+
+
+#closeModal {
+
+    cursor:pointer;
+    float:right;
+    font-size:22px;
+    font-weight:bold;
+
+}
+
+
+
+/* MOBILE */
+
+@media(max-width:500px){
+
+#booksContainer{
+
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+
+}
+
+
+.bookCard img{
+
+width:110px;
+height:150px;
+
+}
+
+
+.bookCard h3{
+
+font-size:13px;
+
+}
+
+
+.bookCard p{
+
+font-size:11px;
+
+}
+
+
+.bookCard a{
+
+font-size:11px;
+
+}
+
+}
+
+
 </style>
+
 </head>
+
+
 <body>
+
+
 <header>
-  <div id="burger">&#9776;</div>
-  <h1>Biblioteka Online</h1>
-  <input type="text" id="searchBox" placeholder="Kërko libër ose autor...">
+
+<div id="burger">&#9776;</div>
+
+<h1>Biblioteka Online</h1>
+
+<input 
+type="text" 
+id="searchBox" 
+placeholder="Kërko libër ose autor..."
+>
+
 </header>
 
+
+
 <nav id="navMenu">
-  <span id="closeNav">✖</span>
-  <ul>
-    <li class="categoryItem" data-category="">Të gjitha</li>
-    <li class="categoryItem" data-category="Romane">Romane</li>
-    <li class="categoryItem" data-category="Letërsi Shqipe">Letërsi Shqipe</li>
-    <li class="categoryItem" data-category="Te tjera">Të tjera</li>
-    <li id="cPanelLink">C Panel</li>
-  </ul>
+
+<span id="closeNav">✖</span>
+
+
+<ul id="categoryMenu">
+
+<li class="categoryItem" data-category="">
+Të gjitha
+</li>
+
+
+<li id="cPanelLink">
+C Panel
+</li>
+
+
+</ul>
+
+
 </nav>
+
+
+
 
 <div id="booksContainer"></div>
 
-<!-- Modal -->
+
+
+<!-- MODAL -->
+
 <div id="bookModal">
-  <div id="bookModalContent">
-    <span id="closeModal">✖</span>
-    <div id="modalContent"></div>
-  </div>
+
+
+<div id="bookModalContent">
+
+
+<span id="closeModal">
+✖
+</span>
+
+
+<div id="modalContent"></div>
+
+
+</div>
+
+
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { 
+initializeApp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+
+import { 
+getFirestore,
+collection,
+getDocs,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+
+// FIREBASE CONFIG
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
-  authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
-  projectId: "bibliotekaapp-2f2b5",
-  storageBucket: "bibliotekaapp-2f2b5.appspot.com",
-  messagingSenderId: "1056004303783",
-  appId: "1:1056004303783:web:335725cdfeefc690702482",
-  measurementId: "G-QHEGWD5J2B"
+
+apiKey: "AIzaSyBrH_LPGz-66c9s9LYqmnyjCEX1yUGt3BA",
+
+authDomain: "bibliotekaapp-2f2b5.firebaseapp.com",
+
+projectId: "bibliotekaapp-2f2b5",
+
+storageBucket: "bibliotekaapp-2f2b5.appspot.com",
+
+messagingSenderId: "1056004303783",
+
+appId: "1:1056004303783:web:335725cdfeefc690702482",
+
+measurementId: "G-QHEGWD5J2B"
+
 };
 
+
+
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-const booksContainer = document.getElementById("booksContainer");
-const navMenu = document.getElementById("navMenu");
-const burger = document.getElementById("burger");
-const cPanelLink = document.getElementById("cPanelLink");
-const categoryItems = document.querySelectorAll(".categoryItem");
-const searchBox = document.getElementById("searchBox");
 
-const bookModal = document.getElementById("bookModal");
-const modalContent = document.getElementById("modalContent");
-const closeModal = document.getElementById("closeModal");
-const closeNav = document.getElementById("closeNav");
 
-// Burger toggle
-burger.addEventListener("click", () => { navMenu.style.display = "block"; });
-closeNav.addEventListener("click", () => { navMenu.style.display = "none"; });
+// ELEMENTET
 
-// C Panel
-cPanelLink.addEventListener("click", () => { window.location.href = "panel.html"; });
+const booksContainer =
+document.getElementById("booksContainer");
 
-// Ngarko librat
-async function loadBooks(category = null, searchText = "") {
-  booksContainer.innerHTML = "";
-  let booksQuery = collection(db, "books");
-  if(category) booksQuery = query(collection(db, "books"), where("category","==",category));
-  const snapshot = await getDocs(booksQuery);
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    if(searchText && !(data.title.toLowerCase().includes(searchText.toLowerCase()) || data.author.toLowerCase().includes(searchText.toLowerCase()))) return;
-    const div = document.createElement("div");
-    div.className = "bookCard";
-    div.innerHTML = `
-  <img src="${data.imageUrl}" alt="${data.title}">
-  <h3 class="bookTitle">${data.title}</h3>
-  <p><strong>Autor:</strong> <span class="bookAuthor">${data.author}</span></p>
-  <p><strong>Viti:</strong> <span class="bookYear">${data.year}</span></p>
-  <a href="${data.pdfUrl}" target="_blank">Shkarko PDF</a>
+
+const categoryMenu =
+document.getElementById("categoryMenu");
+
+
+const navMenu =
+document.getElementById("navMenu");
+
+
+const burger =
+document.getElementById("burger");
+
+
+const closeNav =
+document.getElementById("closeNav");
+
+
+const searchBox =
+document.getElementById("searchBox");
+
+
+const cPanelLink =
+document.getElementById("cPanelLink");
+
+
+
+const bookModal =
+document.getElementById("bookModal");
+
+
+const modalContent =
+document.getElementById("modalContent");
+
+
+const closeModal =
+document.getElementById("closeModal");
+
+
+
+
+// HAP MENU
+
+burger.onclick = () => {
+
+navMenu.style.display="block";
+
+};
+
+
+
+closeNav.onclick = () => {
+
+navMenu.style.display="none";
+
+};
+
+
+
+
+// PANEL
+
+cPanelLink.onclick = () => {
+
+window.location.href="panel.html";
+
+};
+
+
+
+
+
+// ===============================
+// NGARKO KATEGORITE
+// ===============================
+
+
+async function loadCategories(){
+
+
+const snapshot =
+await getDocs(collection(db,"categories"));
+
+
+
+snapshot.forEach(doc=>{
+
+
+const data = doc.data();
+
+
+const li =
+document.createElement("li");
+
+
+li.className="categoryItem";
+
+
+li.textContent=data.name;
+
+
+li.dataset.category=data.name;
+
+
+
+li.onclick=()=>{
+
+
+loadBooks(data.name, searchBox.value);
+
+
+navMenu.style.display="none";
+
+
+};
+
+
+
+categoryMenu.insertBefore(li,cPanelLink);
+
+
+
+});
+
+
+}
+
+
+
+ // ===============================
+// NGARKO LIBRAT
+// ===============================
+
+
+
+async function loadBooks(category=null, searchText=""){
+
+
+
+booksContainer.innerHTML="";
+
+
+let booksQuery;
+
+
+
+if(category){
+
+
+booksQuery =
+query(
+collection(db,"books"),
+where("category","==",category)
+);
+
+
+}
+
+else{
+
+
+booksQuery =
+collection(db,"books");
+
+
+}
+
+
+
+const snapshot =
+await getDocs(booksQuery);
+
+
+
+if(snapshot.empty){
+
+
+booksContainer.innerHTML=
+"<h3 style='text-align:center'>Nuk ka libra</h3>";
+
+return;
+
+
+}
+
+
+
+snapshot.forEach(doc=>{
+
+
+
+const data = doc.data();
+
+
+
+const title =
+data.title || "Pa titull";
+
+
+const author =
+data.author || "Pa autor";
+
+
+const year =
+data.year || "";
+
+
+const image =
+data.imageUrl || "https://via.placeholder.com/150";
+
+
+const pdf =
+data.pdfUrl || "#";
+
+
+
+
+if(searchText){
+
+
+const text =
+searchText.toLowerCase();
+
+
+
+if(
+!title.toLowerCase().includes(text)
+&&
+!author.toLowerCase().includes(text)
+
+)
+
+return;
+
+
+}
+
+
+
+
+const div =
+document.createElement("div");
+
+
+div.className="bookCard";
+
+
+
+div.innerHTML=`
+
+<img src="${image}" alt="${title}">
+
+
+<h3 class="bookTitle">
+${title}
+</h3>
+
+
+<p>
+<strong>Autor:</strong>
+<span class="bookAuthor">
+${author}
+</span>
+</p>
+
+
+<p>
+<strong>Viti:</strong>
+<span class="bookYear">
+${year}
+</span>
+</p>
+
+
+
+<a href="${pdf}" target="_blank">
+📥 Shkarko PDF
+</a>
+
+
 `;
-    div.addEventListener("click", (e) => {
-      if(e.target.tagName !== 'A') showBookModal(data);
-    });
-    booksContainer.appendChild(div);
-  });
+
+
+
+
+div.onclick=(e)=>{
+
+
+if(e.target.tagName!="A"){
+
+showBookModal(data);
+
 }
 
-// Modal funksion
-function showBookModal(bookData) {
-  modalContent.innerHTML = `
-    <h2>${bookData.title}</h2>
-    <p><strong>Autor:</strong> ${bookData.author}</p>
-    <p><strong>Viti:</strong> ${bookData.year}</p>
-    <img src="${bookData.imageUrl}" alt="${bookData.title}">
-    <p>${bookData.description}</p>
-    <a href="${bookData.pdfUrl}" target="_blank">Shkarko PDF</a>
-  `;
-  bookModal.style.display = "flex";
+
+};
+
+
+
+booksContainer.appendChild(div);
+
+
+
+});
+
+
+
 }
 
-// Close modal
-closeModal.addEventListener("click", () => { bookModal.style.display = "none"; });
 
-// Filtrimi sipas kategorive
-categoryItems.forEach(item => {
-  item.addEventListener("click", () => {
-    const selectedCategory = item.dataset.category || null;
-    loadBooks(selectedCategory, searchBox.value);
-    navMenu.style.display = "none";
-  });
-});
 
-// Filtrimi sipas kërkimit
-searchBox.addEventListener("input", () => {
-  loadBooks(null, searchBox.value);
-});
 
-// Ngarko librat fillimisht
+
+
+
+// ===============================
+// MODAL
+// ===============================
+
+
+function showBookModal(book){
+
+
+modalContent.innerHTML=`
+
+<h2>
+${book.title || ""}
+</h2>
+
+
+<p>
+<strong>Autor:</strong>
+${book.author || ""}
+</p>
+
+
+<p>
+<strong>Viti:</strong>
+${book.year || ""}
+</p>
+
+
+
+<img src="${book.imageUrl || ""}">
+
+
+<p>
+${book.description || ""}
+</p>
+
+
+
+<a href="${book.pdfUrl}" target="_blank">
+📥 Shkarko PDF
+</a>
+
+`;
+
+
+
+bookModal.style.display="flex";
+
+
+}
+
+
+
+
+closeModal.onclick=()=>{
+
+
+bookModal.style.display="none";
+
+
+};
+
+
+
+
+
+// ===============================
+// KERKIMI
+// ===============================
+
+
+searchBox.addEventListener(
+"input",
+()=>{
+
+loadBooks(null,searchBox.value);
+
+}
+
+);
+
+
+
+
+
+// START
+
+loadCategories();
+
 loadBooks();
+
+
+
 </script>
+
+
 </body>
+
 </html>
-
-
-
-
-
-
-
-
